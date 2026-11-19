@@ -1,0 +1,11 @@
+services:
+  rideops-support-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rideops-support-copilot
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
