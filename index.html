@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RideOps | Support Intelligence Desk & Gatekeeper</title>
+  
+  <!-- HookScene Typography: Inter + Plus Jakarta Sans + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#FEF9E7',
+              100: '#FDF0C4',
+              200: '#FBE49B',
+              500: '#E8A72D', // HookScene primary amber accent
+              600: '#D9941E',
+              700: '#B47314'
+            },
+            slate: {
+              50: '#F8FAFC',
+              100: '#F1F5F9',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+              400: '#94A3B8',
+              500: '#64748B',
+              600: '#475569',
+              700: '#334155',
+              800: '#1E293B',
+              900: '#0F172A'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- PapaParse CDN for high-speed client-side CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Data Script (Preloaded 1,444 tickets for 0-CORS local viewing) -->
+  <script src="data.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      letter-spacing: -0.025em;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.15s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex bg-[#F8FAFC] text-slate-900 text-sm">
+
+  <!-- ========================================================================= -->
+  <!-- CLEAN LEFT SIDEBAR                                                        -->
+  <!-- ========================================================================= -->
+  <aside id="sidebar" class="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col justify-between h-screen sticky top-0 z-30 select-none">
+    <div>
+      <!-- Brand Logo Header -->
+      <div class="h-16 px-5 flex items-center justify-between border-b border-slate-100">
+        <span class="font-extrabold text-xl tracking-tight text-slate-900">RideOps</span>
+      </div>
+
+      <div class="p-3.5 space-y-3">
+        <!-- New Triage Action Button -->
+        <button onclick="switchTab('triage'); filterToBacklog();" class="w-full h-11 bg-slate-900 hover:bg-black text-white font-bold text-sm rounded-xl flex items-center justify-between px-3.5 shadow-sm transition">
+          <span>Active Backlog (<span id="sidebarBacklogCount">48</span>)</span>
+          <i data-lucide="inbox" class="w-4 h-4 text-brand-400"></i>
+        </button>
+
+        <!-- Clean Primary Navigation -->
+        <nav class="space-y-1.5">
+          <!-- 1: Review Desk -->
+          <button onclick="switchTab('triage')" id="navBtn-triage" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-bold transition bg-slate-100 text-slate-900">
+            <span>Review Desk</span>
+            <i data-lucide="columns-2" class="w-4 h-4 text-slate-600"></i>
+          </button>
+
+          <!-- 2: Run Studio / Quick-Fix Tools -->
+          <button onclick="switchTab('quickfix')" id="navBtn-quickfix" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+            <span>Run Studio (Quick-Fix)</span>
+            <i data-lucide="zap" class="w-4 h-4 text-slate-400"></i>
+          </button>
+
+          <!-- 3: Command Center -->
+          <button onclick="switchTab('analytics')" id="navBtn-analytics" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+            <span>Command Center</span>
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
+          </button>
+
+          <!-- 4: Executive Deck -->
+          <button onclick="switchTab('deck')" id="navBtn-deck" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+            <span>Executive Deck</span>
+            <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Sidebar Bottom Persona & Info -->
+    <div class="p-4 border-t border-slate-100 text-xs text-slate-500 font-medium space-y-1">
+      <div class="flex items-center gap-1.5 font-bold text-slate-700 text-xs">
+        <i data-lucide="user-check" class="w-4 h-4 text-brand-600"></i>
+        <span>User: L1 Support Agent</span>
+      </div>
+      <div class="text-xs text-slate-400">Pre-Escalation Gatekeeper v0.9</div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE                                                            -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex flex-col min-w-0">
+    
+    <!-- Top Breadcrumb Header Bar with Dynamic CSV Upload -->
+    <header class="h-16 bg-white border-b border-slate-200 sticky top-0 z-20 px-6 flex items-center justify-between select-none">
+      <div class="flex items-center gap-3 text-sm">
+        <span class="font-bold text-slate-900 text-sm">RideOps</span>
+        <span class="text-slate-400">/</span>
+        <span id="breadcrumbSection" class="font-semibold text-slate-700 text-sm">Review Desk</span>
+        
+        <!-- Status Pill -->
+        <span id="dataStatusPill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="dataStatusText">1,444 Tickets Active</span>
+        </span>
+
+        <!-- Active Custom Dataset Pill + Reset Button (shows when custom CSV is loaded) -->
+        <div id="activeDatasetBadge" class="hidden items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span id="customFilenameLabel">sample.csv</span>
+          </span>
+          <button onclick="resetToDefaultDataset()" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Restore original 1,444 Q3 tickets">
+            <i data-lucide="rotate-ccw" class="w-3 h-3 text-slate-500"></i>
+            <span>Reset to Default (1,444)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Controls: Upload New CSV + User Avatar -->
+      <div class="flex items-center gap-3">
+        <!-- Export Filtered Queue Button -->
+        <button onclick="exportTriageReport()" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition shadow-sm" title="Download active queue as CSV">
+          <i data-lucide="download" class="w-4 h-4 text-slate-500"></i>
+          <span>Export Queue</span>
+        </button>
+
+        <!-- Hidden CSV File Input -->
+        <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileUpload(event)" class="hidden">
+        
+        <!-- Upload Custom CSV Button -->
+        <button onclick="document.getElementById('csvFileInput').click()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition shadow-sm">
+          <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+          <span>Upload CSV</span>
+        </button>
+
+        <div class="w-9 h-9 rounded-full bg-amber-200 border border-amber-300 text-amber-950 font-bold text-xs flex items-center justify-center shadow-sm" title="Active Session">
+          RO
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+      
+      <!-- ========================================================================= -->
+      <!-- VIEW 1: REVIEW DESK                                                       -->
+      <!-- ========================================================================= -->
+      <section id="view-triage" class="tab-pane space-y-6 fade-in">
+        
+        <!-- Header Row: Title + 3 Summary KPI Cards -->
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-brand-50 text-brand-800 border border-brand-200">
+                Built for L1 Agent Persona
+              </span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Support Review Desk</h1>
+            <p class="text-sm text-slate-500 font-medium mt-1">Pre-Escalation Gatekeeper & Instant L1 Resolution Workspace</p>
+          </div>
+
+          <!-- 3 Summary KPI Cards -->
+          <div class="flex items-center gap-3">
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[135px]">
+              <i data-lucide="database" class="w-5 h-5 text-slate-500"></i>
+              <div>
+                <div id="statTotalTickets" class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight leading-none">1,444</div>
+                <div class="text-xs font-semibold text-slate-500 mt-1">Total Inflow</div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[145px]">
+              <i data-lucide="star" class="w-5 h-5 fill-amber-400 text-amber-500"></i>
+              <div>
+                <div id="statEscalatedTickets" class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight leading-none">486</div>
+                <div class="text-xs font-semibold text-slate-500 mt-1">Escalations (34%)</div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] min-w-[155px]">
+              <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
+              <div>
+                <div id="statDeflectedLive" class="text-2xl font-extrabold text-emerald-600 font-mono tracking-tight leading-none">0</div>
+                <div class="text-xs font-semibold text-slate-500 mt-1">Resolved by L1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Dataset Alert Banner (Shows when external CSV is uploaded) -->
+        <div id="customDatasetBanner" class="hidden p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-950 flex items-center justify-center font-bold flex-shrink-0">
+              <i data-lucide="file-check-2" class="w-5 h-5 text-amber-900"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900 flex flex-wrap items-center gap-2">
+                <span>Active Dataset:</span>
+                <span id="bannerFilename" class="font-mono text-xs font-extrabold bg-white px-2.5 py-0.5 rounded border border-amber-300 text-amber-950">custom.csv</span>
+                <span id="bannerCount" class="text-xs font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">120 tickets loaded</span>
+              </div>
+              <p class="text-xs text-amber-800 mt-0.5 font-medium">
+                The default 1,444 tickets are completely unloaded. The queue below displays <b>only</b> the tickets from your uploaded CSV.
+              </p>
+            </div>
+          </div>
+          <button onclick="resetToDefaultDataset()" class="self-start sm:self-auto px-3.5 py-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-950 text-xs font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>Switch Back to Default Q3 (1,444)</span>
+          </button>
+        </div>
+
+        <!-- Filter Bar with 1-Click "Active Open Tickets (48)" Pill -->
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 text-sm">
+          
+          <!-- Search input -->
+          <div class="relative flex-1 max-w-sm">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+            <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Search by ticket ID, client, text..." class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-medium shadow-sm">
+          </div>
+
+          <!-- Dropdown Filters + Fast Backlog Toggle -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- 1-Click Active Backlog Button -->
+            <button onclick="toggleBacklogFilter()" id="btnBacklogToggle" class="px-3.5 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
+              <span>Active Backlog (<span id="backlogCountDisplay">48</span>)</span>
+            </button>
+
+            <select id="filterCategory" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm cursor-pointer text-sm">
+              <option value="ALL">All Categories</option>
+              <option value="Roster / booking not syncing">Roster / booking sync (344)</option>
+              <option value="Live tracking / GPS incorrect">Live tracking / GPS (228)</option>
+              <option value="Report export failing">Report export failing (206)</option>
+              <option value="Cab delay / no-show complaint">Cab delay / no-show (147)</option>
+              <option value="Login / access issue">Login / access issue (100)</option>
+            </select>
+
+            <select id="filterPriority" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm cursor-pointer text-sm">
+              <option value="ALL">All Priorities</option>
+              <option value="P1">P1 Critical</option>
+              <option value="P2">P2 High</option>
+              <option value="P3">P3 Normal</option>
+              <option value="P4">P4 Low</option>
+            </select>
+
+            <select id="filterRisk" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm cursor-pointer text-sm">
+              <option value="HIGH_RISK" selected>⚠️ High Risk Escalations</option>
+              <option value="ALL">All Tickets</option>
+              <option value="OPEN">Open Tickets Only</option>
+              <option value="ESCALATED">Historical Escalations</option>
+              <option value="RESOLVED_L1">Resolved by L1</option>
+            </select>
+
+            <select id="filterAgent" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm cursor-pointer text-sm">
+              <option value="ALL">All Agents</option>
+              <option value="Rahul T">Rahul T (61.6% Esc)</option>
+              <option value="Karan B">Karan B (0.36 Reopen)</option>
+              <option value="Sneha M">Sneha M</option>
+              <option value="Vikram S">Vikram S</option>
+              <option value="Ananya R">Ananya R</option>
+              <option value="Arjun K">Arjun K</option>
+              <option value="Priya D">Priya D</option>
+              <option value="Neha P">Neha P</option>
+            </select>
+          </div>
+
+          <!-- Pagination Indicator -->
+          <div class="flex items-center gap-2 text-slate-600 font-semibold self-end lg:self-center">
+            <span id="queueIndexDisplay" class="font-mono text-sm">1 of 50</span>
+            <div class="flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+              <button onclick="prevTicket()" class="p-2 hover:bg-slate-50 transition border-r border-slate-200 text-slate-600">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <button onclick="nextTicket()" class="p-2 hover:bg-slate-50 transition text-slate-600">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split View -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- LEFT COLUMN: FEED OF TICKETS (5 cols) -->
+          <div class="lg:col-span-5 space-y-3.5 max-h-[740px] overflow-y-auto pr-1" id="ticketCardsList">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- RIGHT COLUMN: DETAIL INSPECTOR (7 cols) -->
+          <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-7 shadow-sm space-y-5 sticky top-20">
+            
+            <!-- Top Badges Row -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span id="inspTicketIdTitle" class="font-mono text-base font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                  SUP-10008
+                </span>
+                <span id="inspPriorityTag" class="text-xs font-bold px-3 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+                  P2 High
+                </span>
+                <span id="inspStatusPill" class="text-xs font-bold px-3 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+                  Open - with L1
+                </span>
+              </div>
+              <span class="text-xs text-slate-500 font-mono font-semibold" id="inspAgentName">Assigned: Rahul T</span>
+            </div>
+
+            <!-- Big Problem Quote Title -->
+            <div>
+              <h2 id="inspTitleQuote" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                "Employees booked for 6 AM shift not showing in roster."
+              </h2>
+              
+              <!-- Meta line -->
+              <div class="flex flex-wrap items-center gap-2 text-sm text-slate-600 font-medium mt-2.5">
+                <span class="flex items-center gap-1.5 text-slate-800 font-bold">
+                  <i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i>
+                  <span id="inspClientFull">Apex Technologies (CL-101)</span>
+                </span>
+                <span>•</span>
+                <span>Tier: <b id="inspTier" class="text-slate-800">Enterprise</b></span>
+                <span>•</span>
+                <span class="px-2.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs font-bold" id="inspCategoryPill">Roster / booking sync</span>
+              </div>
+            </div>
+
+            <!-- Root Cause Diagnostic Callout Box -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2.5">
+              <div class="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wide">
+                <span class="text-base">💡</span>
+                <span id="diagCalloutTitle">Root Cause Diagnosis</span>
+              </div>
+              <p id="diagCalloutText" class="text-sm text-slate-700 leading-relaxed font-medium">
+                Client admin updated shift cutoff settings in the HR portal, but bookings occurred past the cutoff window. This is NOT a software bug.
+              </p>
+              <div class="pt-2.5 border-t border-slate-200 text-sm text-slate-800">
+                <span class="font-bold text-slate-900">Recommended Resolution Guide:</span>
+                <p id="diagCalloutAction" class="text-slate-700 mt-1 leading-relaxed">
+                  Advise client admin to approve late exception, or use the Shift Cutoff Sync tool below to resolve immediately without engineering.
+                </p>
+              </div>
+            </div>
+
+            <!-- Mandatory Gatekeeper Checklist -->
+            <div class="border border-slate-200 rounded-xl p-5 bg-white space-y-3">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <i data-lucide="lock" class="w-4 h-4 text-slate-500"></i>
+                  <span>Mandatory Pre-Flight Checks</span>
+                </span>
+                <span class="text-xs text-slate-500 font-medium">Protect engineering queue</span>
+              </div>
+
+              <label class="flex items-start gap-3 text-sm text-slate-800 cursor-pointer select-none">
+                <input type="checkbox" id="chk1" onchange="evaluateGatekeeper()" class="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 border-slate-300">
+                <span>1. Verified Client Shift & Roster rules (confirmed admin cutoff times).</span>
+              </label>
+
+              <label class="flex items-start gap-3 text-sm text-slate-800 cursor-pointer select-none">
+                <input type="checkbox" id="chk2" onchange="evaluateGatekeeper()" class="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 border-slate-300">
+                <span>2. Confirmed not a duplicate of active platform outage or vendor document block.</span>
+              </label>
+
+              <label class="flex items-start gap-3 text-sm text-slate-800 cursor-pointer select-none">
+                <input type="checkbox" id="chk3" onchange="evaluateGatekeeper()" class="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 border-slate-300">
+                <span>3. Attached Driver/Vehicle IDs, App error screenshot, and reproduction steps.</span>
+              </label>
+            </div>
+
+            <!-- Action Controls (Live State Manipulation) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <div>
+                <button id="btnEscalate" onclick="handleEscalate()" disabled class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border transition bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-sm">
+                  <i id="iconEscalate" data-lucide="lock" class="w-4 h-4"></i>
+                  <span id="textEscalate">Escalate to Eng (Locked)</span>
+                </button>
+                <p id="hintEscalate" class="text-xs text-slate-500 mt-1.5 text-center font-medium">
+                  ⚠️ Disabled: Configuration issue. Resolve via L1 action.
+                </p>
+              </div>
+
+              <div>
+                <button id="btnResolveL1" onclick="handleL1Resolve()" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-brand-500 hover:bg-brand-600 text-slate-950 transition shadow-sm border border-brand-600">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 text-slate-950"></i>
+                  <span id="textResolveL1">Resolve Directly via L1 Guide</span>
+                </button>
+                <p class="text-xs text-slate-500 mt-1.5 text-center font-medium">
+                  ⚡ 8 min resolution • Bypasses 5.4-day bounce loop
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 2: RUN STUDIO (QUICK-FIX TOOLS)                                      -->
+      <!-- ========================================================================= -->
+      <section id="view-quickfix" class="tab-pane space-y-6 hidden fade-in">
+        
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Run Studio</h1>
+          <p class="text-sm text-slate-500 font-medium mt-1">L1 Self-Service Execution Engine & Client Configuration Fixes</p>
+        </div>
+
+        <!-- Tool 1: Shift Booking Cutoff Sync -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <span class="w-7 h-7 rounded-full border border-slate-300 text-slate-800 text-sm font-bold flex items-center justify-center">1</span>
+            <h3 class="text-base font-bold text-slate-900">Shift Booking Cutoff Sync & Grace Override</h3>
+          </div>
+
+          <p class="text-sm text-slate-600 max-w-xl leading-relaxed">
+            Synchronizes client cutoff times to inject pending bookings directly into tomorrow's roster without escalating to engineering.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-sm pt-1">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1.5 text-sm">Corporate Client:</label>
+              <select id="qfClientSelect" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm">
+                <option>Apex Technologies (CL-101)</option>
+                <option>Harbor Health (CL-177)</option>
+                <option>Pinnacle Infotech (CL-105)</option>
+                <option>Nexus Logistics (CL-114)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1.5 text-sm">Target Shift:</label>
+              <select class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm">
+                <option>Morning Shift (06:00 AM)</option>
+                <option selected>General Shift (09:00 AM)</option>
+                <option>Night Shift (10:00 PM)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1.5 text-sm">Cutoff Time Window:</label>
+              <input type="time" value="17:00" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm">
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center gap-3">
+            <button onclick="applyRosterSync()" class="py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold text-sm rounded-xl transition shadow-sm">
+              Apply Cutoff Sync to Client Roster
+            </button>
+            <span id="rosterResultMsg" class="text-sm font-semibold text-emerald-700 hidden"></span>
+          </div>
+        </div>
+
+        <!-- Tool 2: Bulk Report Partitioner -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <span class="w-7 h-7 rounded-full border border-slate-300 text-slate-800 text-sm font-bold flex items-center justify-center">2</span>
+            <h3 class="text-base font-bold text-slate-900">Bulk Report Date-Range Partitioner</h3>
+          </div>
+
+          <p class="text-sm text-slate-600 max-w-xl leading-relaxed">
+            Splits large report queries (>14 days) into 3 fast safe batches that download in 4 seconds instead of hitting PostgreSQL join timeouts.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="text-slate-700 font-semibold text-sm">From:</span>
+              <input type="date" value="2026-08-01" class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm">
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-700 font-semibold text-sm">To:</span>
+              <input type="date" value="2026-08-31" class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm">
+            </div>
+            <button onclick="runReportPartition()" class="py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold text-sm rounded-xl transition shadow-sm">
+              Partition into 3 Batches (4s)
+            </button>
+          </div>
+          <div id="partitionResult" class="text-sm font-semibold text-emerald-700 hidden"></div>
+        </div>
+
+        <!-- Tool 3: Address Pin Validator -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <span class="w-7 h-7 rounded-full border border-slate-300 text-slate-800 text-sm font-bold flex items-center justify-center">3</span>
+            <h3 class="text-base font-bold text-slate-900">Address & Society Geocode Pin Validator</h3>
+          </div>
+
+          <p class="text-sm text-slate-600 max-w-xl leading-relaxed">
+            Re-anchors cab pickup coordinates for residential societies and updates linked employee profiles in under 5 seconds.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 text-sm">
+            <input type="text" value="Greenfield Heights, Sector 62" class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm sm:w-80">
+            <button onclick="runGeocodeValidator()" class="py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold text-sm rounded-xl transition shadow-sm">
+              Re-anchor Lat/Long Pin
+            </button>
+          </div>
+          <div id="geocodeResult" class="text-sm font-semibold text-emerald-700 hidden"></div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 3: COMMAND CENTER                                                    -->
+      <!-- ========================================================================= -->
+      <section id="view-analytics" class="tab-pane space-y-6 hidden fade-in">
+        
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Command Center</h1>
+          <p class="text-sm text-slate-500 font-medium mt-1">Real-time Performance Metrics & Zero-Budget Backlog ROI Simulator</p>
+        </div>
+
+        <!-- 4 KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Total Inflow Volume</span>
+            <div id="kpiTotalInflow" class="text-3xl font-extrabold text-slate-900 mt-1.5 font-mono">1,444</div>
+            <div class="text-xs font-bold text-rose-600 mt-1 flex items-center gap-1">
+              <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+              <span>+51.8% surge (July → Sept)</span>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Escalation Rate</span>
+            <div id="kpiEscRate" class="text-3xl font-extrabold text-slate-900 mt-1.5 font-mono">33.7%</div>
+            <div id="kpiEscCount" class="text-xs font-medium text-slate-500 mt-1">486 tickets sent to Eng</div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Avoidable Non-Bugs</span>
+            <div id="kpiAvoidableRate" class="text-3xl font-extrabold text-slate-900 mt-1.5 font-mono">56.6%</div>
+            <div id="kpiAvoidableCount" class="text-xs font-bold text-rose-600 mt-1">275 not legitimate bugs</div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Cycle Time Penalty</span>
+            <div class="text-3xl font-extrabold text-slate-900 mt-1.5 font-mono">128.6 hrs</div>
+            <div class="text-xs font-medium text-slate-500 mt-1">5.4 days vs 12.6h at L1</div>
+          </div>
+        </div>
+
+        <!-- 4 Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3.5">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">Monthly Ticket Inflow & Escalations</h3>
+            <div class="h-64">
+              <canvas id="chartMonthlyInflow"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3.5">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">Engineering Outcomes (Escalated Tickets)</h3>
+            <div class="h-64 flex items-center justify-center">
+              <canvas id="chartEscalationOutcomes"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3.5">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">Cycle Time Delay (Median Hours)</h3>
+            <div class="h-64">
+              <canvas id="chartResolutionTimes"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3.5">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">Top Escalation Drivers (Pareto Rule)</h3>
+            <div class="h-64">
+              <canvas id="chartCategoryPareto"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backlog Simulator -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Interactive Backlog Reduction & Headcount ROI Simulator</h3>
+              <p class="text-sm text-slate-500">Simulate how deflecting avoidable escalations fulfills Ritika's zero-hiring mandate.</p>
+            </div>
+            <span class="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">$0 Hiring Spend</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-5 space-y-4 text-sm">
+              <div>
+                <div class="flex justify-between items-center mb-2 font-bold">
+                  <span class="text-slate-800 text-sm">Target Deflection Rate:</span>
+                  <span id="sliderValDisplay" class="font-mono text-sm text-brand-600 bg-brand-50 px-2.5 py-1 rounded border border-brand-200">60%</span>
+                </div>
+                <input type="range" id="simSlider" min="20" max="90" value="60" step="5" oninput="updateSimulator(this.value)" class="w-full accent-slate-900 cursor-pointer h-2 bg-slate-200 rounded-lg">
+                <div class="flex justify-between text-xs text-slate-500 font-semibold mt-1.5">
+                  <span>Conservative (20%)</span>
+                  <span>Balanced (60%)</span>
+                  <span>Aggressive (90%)</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3.5 pt-1">
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="text-xs font-bold uppercase text-slate-500 block">Annual Deflected</span>
+                  <span id="simTickets" class="font-mono text-xl font-extrabold text-slate-900">660</span>
+                </div>
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="text-xs font-bold uppercase text-slate-500 block">Eng Hours Saved</span>
+                  <span id="simHours" class="font-mono text-xl font-extrabold text-emerald-700">3,630 hrs</span>
+                </div>
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="text-xs font-bold uppercase text-slate-500 block">FTE Eng Unlocked</span>
+                  <span id="simFTE" class="font-mono text-xl font-extrabold text-slate-900">2.0 Eng</span>
+                </div>
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="text-xs font-bold uppercase text-slate-500 block">Backlog Drop</span>
+                  <span id="simBacklog" class="font-mono text-xl font-extrabold text-blue-700">50 → 18</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-7 bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <div class="h-56">
+                <canvas id="chartSimulator"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Matrix Table -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900">Support Agent Discrepancy & Coaching Matrix</h3>
+              <p class="text-xs text-slate-500">Root-cause identification of training gaps (Rahul T & Karan B coaching priorities)</p>
+            </div>
+            <span class="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-lg">8 Agents</span>
+          </div>
+
+          <div class="overflow-x-auto text-sm">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-600 font-bold uppercase text-xs">
+                  <th class="py-3 px-3.5">Agent</th>
+                  <th class="py-3 px-3.5">Tickets</th>
+                  <th class="py-3 px-3.5">Escalation Rate</th>
+                  <th class="py-3 px-3.5">Reopen Rate</th>
+                  <th class="py-3 px-3.5">Avg CSAT</th>
+                  <th class="py-3 px-3.5">Target Coaching Action</th>
+                </tr>
+              </thead>
+              <tbody id="agentMatrixBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Dynamically populated or updated based on loaded dataset -->
+                <tr class="bg-amber-50/40">
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Rahul T</td>
+                  <td class="py-3 px-3.5 font-mono">151</td>
+                  <td class="py-3 px-3.5 font-mono font-bold text-rose-600">61.6% ⚠️</td>
+                  <td class="py-3 px-3.5 font-mono">0.08</td>
+                  <td class="py-3 px-3.5 font-mono">3.52</td>
+                  <td class="py-3 px-3.5"><span class="px-2.5 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800">High Escalation: Train on pre-flight checks</span></td>
+                </tr>
+                <tr class="bg-amber-50/40">
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Karan B</td>
+                  <td class="py-3 px-3.5 font-mono">217</td>
+                  <td class="py-3 px-3.5 font-mono">16.1%</td>
+                  <td class="py-3 px-3.5 font-mono font-bold text-rose-600">0.36 ⚠️</td>
+                  <td class="py-3 px-3.5 font-mono">3.13</td>
+                  <td class="py-3 px-3.5"><span class="px-2.5 py-1 rounded text-xs font-bold bg-amber-100 text-amber-800">High Reopen: Coach on root cause verification</span></td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Sneha M</td>
+                  <td class="py-3 px-3.5 font-mono">176</td>
+                  <td class="py-3 px-3.5 font-mono">34.7%</td>
+                  <td class="py-3 px-3.5 font-mono text-emerald-600 font-bold">0.06</td>
+                  <td class="py-3 px-3.5 font-mono">3.72</td>
+                  <td class="py-3 px-3.5"><span class="px-2.5 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800">Exemplary low reopen count</span></td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Vikram S</td>
+                  <td class="py-3 px-3.5 font-mono">176</td>
+                  <td class="py-3 px-3.5 font-mono">30.1%</td>
+                  <td class="py-3 px-3.5 font-mono">0.05</td>
+                  <td class="py-3 px-3.5 font-mono font-bold text-emerald-700">3.92</td>
+                  <td class="py-3 px-3.5"><span class="px-2.5 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800">High CSAT Leader</span></td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Ananya R</td>
+                  <td class="py-3 px-3.5 font-mono">189</td>
+                  <td class="py-3 px-3.5 font-mono">40.2%</td>
+                  <td class="py-3 px-3.5 font-mono">0.07</td>
+                  <td class="py-3 px-3.5 font-mono">3.84</td>
+                  <td class="py-3 px-3.5 text-slate-500">Standard Gatekeeper guidance</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3.5 font-bold text-slate-900">Arjun K</td>
+                  <td class="py-3 px-3.5 font-mono">178</td>
+                  <td class="py-3 px-3.5 font-mono">32.6%</td>
+                  <td class="py-3 px-3.5 font-mono">0.08</td>
+                  <td class="py-3 px-3.5 font-mono">3.85</td>
+                  <td class="py-3 px-3.5 text-slate-500">Solid steady performance</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 4: EXECUTIVE DECK                                                    -->
+      <!-- ========================================================================= -->
+      <section id="view-deck" class="tab-pane space-y-6 hidden fade-in">
+        
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Executive Presentation Master</h1>
+            <p class="text-sm text-slate-500 font-medium mt-1">8-Slide Briefing Prepared for Ritika, Meera and Sandeep</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-sm" title="Print or Save Deck as PDF">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>Print / PDF</span>
+            </button>
+            <button onclick="prevSlide()" class="p-2.5 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-600 transition shadow-sm">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span id="deckSlideNum" class="font-mono text-sm font-bold px-3.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 shadow-sm">
+              Slide 1 of 8
+            </span>
+            <button onclick="nextSlide()" class="p-2.5 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-600 transition shadow-sm">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 shadow-sm min-h-[480px]">
+          <!-- Slide 1 -->
+          <div id="deck-1" class="slide-item space-y-5">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 1: Executive Dilemma</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Breaking the Deadlock: Solving Support's Backlog Without Adding Headcount</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <b class="text-slate-900 block text-sm">Meera (Support Lead)</b>
+                <p class="text-slate-600 italic leading-relaxed text-sm">"Engineering is a black hole. Tickets disappear for days and clients scream for updates."</p>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <b class="text-slate-900 block text-sm">Sandeep (Eng Manager)</b>
+                <p class="text-slate-600 italic leading-relaxed text-sm">"Support sends us junk with no logs. More than half are client config mistakes."</p>
+              </div>
+              <div class="p-4 bg-brand-50 border border-brand-200 rounded-xl space-y-1.5">
+                <b class="text-brand-900 block text-sm">Ritika (Head of Ops)</b>
+                <p class="text-brand-900 font-semibold leading-relaxed text-sm">"No finger-pointing. Bring open backlog down this quarter with ZERO hiring budget."</p>
+              </div>
+            </div>
+            <p class="text-sm sm:text-base text-slate-700 leading-relaxed pt-2">
+              <b>Strategic Assessment:</b> The surge (+51.8% in Q3) caused support to escalate 33.7% of tickets. But 56.6% of those escalations are not code bugs! Stopping bad escalations at L1 unlocks 2 full-time engineers' bandwidth and solves the backlog at $0 cost.
+            </p>
+          </div>
+
+          <!-- Slide 2 -->
+          <div id="deck-2" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 2: Diagnosis</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">The Data Proves Sandeep is Right: 56.6% of Escalations Are Waste</h2>
+            <div class="text-sm sm:text-base space-y-3 text-slate-800">
+              <div class="p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-900 font-bold">
+                Out of 486 engineering escalations, 275 tickets were NOT software bugs:
+              </div>
+              <ul class="space-y-2 pl-2">
+                <li>• <b>89 tickets (18.3%):</b> Insufficient info (Support didn't collect basic device logs).</li>
+                <li>• <b>84 tickets (17.3%):</b> Client configuration issues (Admin changed cutoff times).</li>
+                <li>• <b>56 tickets (11.5%):</b> Duplicate of known issue.</li>
+                <li>• <b>46 tickets (9.5%):</b> How-to queries or not reproducible.</li>
+                <li>• <b>Only 211 tickets (43.4%):</b> Were legitimate software code fixes!</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div id="deck-3" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 3: Cycle Time Analysis</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">The Data Also Proves Meera is Right: The 5-Day Ping-Pong Delay</h2>
+            <div class="text-sm sm:text-base space-y-3 text-slate-800">
+              <p>When support prematurely escalates without verification, tickets bounce between L1 and Engineering 2 to 3 times:</p>
+              <div class="grid grid-cols-2 gap-3.5 pt-1">
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                  <b class="text-slate-800">Resolved by L1 (No Escalation):</b>
+                  <div class="text-emerald-700 font-bold text-lg mt-1 font-mono">12.6 hrs (CSAT: 4.01)</div>
+                </div>
+                <div class="p-4 bg-rose-50 border border-rose-200 rounded-lg">
+                  <b class="text-rose-900">Config Issue Bounced to L1:</b>
+                  <div class="text-rose-700 font-bold text-lg mt-1 font-mono">128.6 hrs / 5.4 days (CSAT: 2.43)</div>
+                </div>
+              </div>
+              <p class="pt-2 text-slate-600 italic">Premature escalation is the #1 driver of customer dissatisfaction.</p>
+            </div>
+          </div>
+
+          <!-- Slide 4 -->
+          <div id="deck-4" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 4: Focus Strategy</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Where to Focus: 3 Categories Drive 78% of All Escalations</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-sm pt-1">
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <b class="text-slate-900 block text-sm">1. Roster Sync (175 Escalated)</b>
+                <p class="text-slate-600 leading-relaxed text-sm">Root cause: Cutoff times changed in portal. Solvable in 2 mins via L1 sync tool.</p>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <b class="text-slate-900 block text-sm">2. Live Tracking / GPS (127 Escalated)</b>
+                <p class="text-slate-600 leading-relaxed text-sm">Root cause: Missing telemetry & battery saver mode. Mandatory diagnostic gatekeeper stops 89% of rejections.</p>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <b class="text-slate-900 block text-sm">3. Report Export (77 Escalated)</b>
+                <p class="text-slate-600 leading-relaxed text-sm">Root cause: >14 day database joins. Automated batch partitioner finishes in 4s.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 5 -->
+          <div id="deck-5" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 5: Metrics</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">The Week-to-Week Success Framework</h2>
+            <div class="text-sm sm:text-base space-y-3.5">
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <b>North Star Metric:</b> Active Open Support Backlog (Target: -40% in 4 weeks, from ~50 down to <20).
+              </div>
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <b>Primary Leading Indicator:</b> Escalation Rejection Rate (Target: reduce from 56.6% down to <15%).
+              </div>
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <b>Guardrails:</b> L1 Turnaround < 12 hrs, CSAT $\ge 4.2$, Reopen Rate < 5%.
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 6 -->
+          <div id="deck-6" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 6: Tool Capabilities</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">The Working v0 Tool: Smart Triage & Pre-Escalation Gatekeeper</h2>
+            <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+              Equips L1 agents with automated root-cause detection, locks premature engineering escalations behind a 3-question checklist, and provides instant self-service configuration overrides.
+            </p>
+          </div>
+
+          <!-- Slide 7 -->
+          <div id="deck-7" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 7: 4-Week Schedule & Non-Goals</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Execution Schedule and What We Will NOT Do</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm pt-2">
+              <div class="space-y-2.5">
+                <b class="text-slate-900 uppercase text-xs block">4-Week Phased Rollout:</b>
+                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">Week 1: Deploy Gatekeeper for Top 3 categories; coach Rahul T.</div>
+                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">Week 2: Release Self-Service Cutoff Sync to L1 team.</div>
+                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">Week 3: Automated ticket status tracking on portal/WhatsApp.</div>
+                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">Week 4: Support-Engineering SLA contracts (auto-reject in 2h).</div>
+              </div>
+              <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
+                <b class="text-rose-900 uppercase text-xs block">What We Deliberately Will NOT Do:</b>
+                <ul class="space-y-2 text-rose-900 leading-relaxed text-sm">
+                  <li>❌ Do NOT hire new agents or engineers (Zero-budget mandate).</li>
+                  <li>❌ Do NOT rewrite core backend software (quarterly crisis).</li>
+                  <li>❌ Do NOT deploy a generic customer chatbot (causes B2B friction).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 8 -->
+          <div id="deck-8" class="slide-item space-y-5 hidden">
+            <span class="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded uppercase">Slide 8: Immediate Next Steps</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Action Plan for Tomorrow at 09:00 AM</h2>
+            <div class="space-y-3.5 text-sm pt-1">
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">1. Sign-off with Ritika, Meera, and Sandeep on gatekeeper checklist.</div>
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">2. Deploy v0 to Rahul T and Karan B on the morning shift.</div>
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">3. Review first Friday deflection metrics toward the -40% backlog reduction goal.</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-800 text-xs">
+      <div id="toastIcon" class="w-6 h-6 rounded-lg bg-brand-500 text-slate-950 flex items-center justify-center font-bold">✓</div>
+      <div>
+        <div id="toastTitle" class="font-bold">Success</div>
+        <div id="toastMsg" class="text-slate-300">Action recorded.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    const state = {
+      tickets: [],
+      defaultTickets: [],
+      filteredTickets: [],
+      selectedTicket: null,
+      selectedIndex: 0,
+      deflectedCount: 0,
+      currentSlide: 1,
+      totalSlides: 8,
+      charts: {},
+      isBacklogFiltered: false,
+      isCustomDataset: false,
+      activeDatasetName: "Default RideOps Dataset (1,444 Tickets)"
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // 1. Initial load from prebundled data.js (no network/server required)
+      if (window.RIDE_OPS_DATA && Array.isArray(window.RIDE_OPS_DATA)) {
+        loadTicketDataset(window.RIDE_OPS_DATA, "Default RideOps Dataset (1,444 Tickets)", false);
+      } else {
+        fetch('tickets.json')
+          .then(res => res.json())
+          .then(data => {
+            loadTicketDataset(data, "Default RideOps Dataset (1,444 Tickets)", false);
+          })
+          .catch(err => {
+            console.error("Error loading tickets:", err);
+          });
+      }
+    });
+
+    // Synchronize open backlog counters across both the sidebar and the filter bar
+    function updateBacklogCounters() {
+      const openCount = state.tickets.filter(t => t.status !== 'Closed' && !t.isResolvedLive).length;
+      const el1 = document.getElementById('backlogCountDisplay');
+      if (el1) el1.innerText = openCount;
+      const el2 = document.getElementById('sidebarBacklogCount');
+      if (el2) el2.innerText = openCount;
+    }
+
+    // Universal Ticket Dataset Loader (Works for default data or any user-uploaded CSV!)
+    function loadTicketDataset(data, sourceLabel, isCustom = false, filename = '') {
+      // 1. Cache the default dataset so user can switch back any time with 1 click
+      if (!isCustom && (!state.defaultTickets || state.defaultTickets.length === 0)) {
+        state.defaultTickets = [...data];
+      }
+
+      state.isCustomDataset = isCustom;
+      state.activeDatasetName = isCustom ? filename : "Default Q3 (1,444 Tickets)";
+      state.deflectedCount = 0;
+      document.getElementById('statDeflectedLive').innerText = '0';
+      state.selectedTicket = null;
+      state.selectedIndex = 0;
+
+      // 2. Completely REPLACE state.tickets with the new data (NEVER mix or merge!)
+      state.tickets = data.map(t => {
+        const c = new Date(t.created_at);
+        const f = t.final_closed_at ? new Date(t.final_closed_at) : new Date();
+        const res_hrs = Math.max(0.5, ((f - c) / (1000 * 3600)));
+        return {
+          ...t,
+          res_hrs: isNaN(res_hrs) ? 12.0 : res_hrs,
+          status: t.status || 'Closed',
+          priority: t.priority || 'P3',
+          category: t.category || 'General Issue',
+          client_name: t.client_name || 'Corporate Client',
+          assigned_agent: t.assigned_agent || 'Support Team',
+          isResolvedLive: false
+        };
+      });
+
+      // 3. Update Header counters
+      document.getElementById('dataStatusText').innerText = `${state.tickets.length.toLocaleString()} Tickets Active`;
+      document.getElementById('statTotalTickets').innerText = state.tickets.length.toLocaleString();
+
+      const escCount = state.tickets.filter(t => t.escalated_to_eng === 'Yes').length;
+      document.getElementById('statEscalatedTickets').innerText = `${escCount} (${Math.round((escCount/state.tickets.length)*100)}%)`;
+
+      // 4. Update open backlog count dynamically for both sidebar and filter bar
+      updateBacklogCounters();
+
+      // 5. Completely reset all filter dropdowns so user doesn't have stale/hidden filters
+      document.getElementById('filterSearch').value = '';
+      document.getElementById('filterPriority').value = 'ALL';
+      document.getElementById('filterRisk').value = 'ALL';
+      state.isBacklogFiltered = false;
+      const btnBacklog = document.getElementById('btnBacklogToggle');
+      if (btnBacklog) {
+        btnBacklog.className = 'px-3.5 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50';
+      }
+
+      // 6. Update Custom Dataset Indicators (Banner + Header badge)
+      const banner = document.getElementById('customDatasetBanner');
+      const badge = document.getElementById('activeDatasetBadge');
+      if (isCustom) {
+        if (banner) {
+          banner.classList.remove('hidden');
+          document.getElementById('bannerFilename').innerText = filename;
+          document.getElementById('bannerCount').innerText = `${state.tickets.length} tickets loaded`;
+        }
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.classList.add('flex');
+          document.getElementById('customFilenameLabel').innerText = filename;
+        }
+      } else {
+        if (banner) banner.classList.add('hidden');
+        if (badge) {
+          badge.classList.add('hidden');
+          badge.classList.remove('flex');
+        }
+      }
+
+      populateDropdownFilters();
+      applyFilters();
+      updateAnalyticsAndCharts();
+      initSimulator();
+
+      showToast(isCustom ? "New CSV Loaded" : "Default Dataset Loaded", sourceLabel || "Tickets dataset loaded successfully.");
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // 1-Click Restore to Default Benchmark Data
+    function resetToDefaultDataset() {
+      if (state.defaultTickets && state.defaultTickets.length > 0) {
+        loadTicketDataset(state.defaultTickets, "Restored Default 1,444 Tickets", false);
+        showToast("Restored Default Data", "Switched back to original July-September dataset (1,444 tickets).");
+      }
+    }
+
+    // Dynamic dropdown filters based on loaded dataset
+    function populateDropdownFilters() {
+      const catSelect = document.getElementById('filterCategory');
+      const agentSelect = document.getElementById('filterAgent');
+      if (!catSelect || !agentSelect) return;
+
+      const currentCat = catSelect.value;
+      const cats = Array.from(new Set(state.tickets.map(t => t.category).filter(Boolean))).sort();
+      catSelect.innerHTML = '<option value="ALL">All Categories</option>' + 
+        cats.map(c => `<option value="${c}" ${c === currentCat ? 'selected' : ''}>${c}</option>`).join('');
+
+      const currentAgent = agentSelect.value;
+      const agents = Array.from(new Set(state.tickets.map(t => t.assigned_agent).filter(Boolean))).sort();
+      agentSelect.innerHTML = '<option value="ALL">All Agents</option>' + 
+        agents.map(a => `<option value="${a}" ${a === currentAgent ? 'selected' : ''}>${a}</option>`).join('');
+
+      // Also dynamically populate Run Studio clients from the active dataset
+      const qfSelect = document.getElementById('qfClientSelect');
+      if (qfSelect) {
+        const uniqueClients = Array.from(new Set(state.tickets.map(t => `${t.client_name} (${t.client_id || 'CL-000'})`))).slice(0, 10);
+        qfSelect.innerHTML = uniqueClients.map(c => `<option>${c}</option>`).join('');
+      }
+    }
+
+    // Handle CSV File Upload
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      Papa.parse(file, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          if (results.data && results.data.length > 0) {
+            loadTicketDataset(results.data, `Uploaded: ${file.name} (${results.data.length} tickets)`, true, file.name);
+          } else {
+            alert("Uploaded CSV file was empty or improperly formatted.");
+          }
+        },
+        error: function(err) {
+          alert(`Error reading CSV: ${err.message}`);
+        }
+      });
+      // Reset input value so user can re-upload the same file if needed
+      event.target.value = '';
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('bg-slate-100', 'text-slate-900');
+        el.classList.add('text-slate-600', 'hover:bg-slate-50', 'hover:text-slate-900');
+      });
+
+      const pane = document.getElementById(`view-${tabId}`);
+      const btn = document.getElementById(`navBtn-${tabId}`);
+      if (pane) pane.classList.remove('hidden');
+      if (btn) {
+        btn.classList.add('bg-slate-100', 'text-slate-900');
+        btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+      }
+
+      const breadcrumb = document.getElementById('breadcrumbSection');
+      if (tabId === 'triage') breadcrumb.innerText = 'Review Desk';
+      else if (tabId === 'quickfix') breadcrumb.innerText = 'Run Studio';
+      else if (tabId === 'analytics') breadcrumb.innerText = 'Command Center';
+      else if (tabId === 'deck') breadcrumb.innerText = 'Executive Deck';
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Toggle 1-Click Active Backlog (48) Filter
+    function toggleBacklogFilter() {
+      state.isBacklogFiltered = !state.isBacklogFiltered;
+      const btn = document.getElementById('btnBacklogToggle');
+      
+      if (state.isBacklogFiltered) {
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-rose-50 border border-rose-300 text-rose-800 ring-1 ring-rose-400';
+        document.getElementById('filterRisk').value = 'OPEN';
+      } else {
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50';
+        document.getElementById('filterRisk').value = 'HIGH_RISK';
+      }
+      applyFilters();
+    }
+
+    function filterToBacklog() {
+      state.isBacklogFiltered = true;
+      const btn = document.getElementById('btnBacklogToggle');
+      btn.className = 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-rose-50 border border-rose-300 text-rose-800 ring-1 ring-rose-400';
+      document.getElementById('filterRisk').value = 'OPEN';
+      applyFilters();
+    }
+
+    // Filtering logic
+    function applyFilters() {
+      const cat = document.getElementById('filterCategory').value;
+      const pri = document.getElementById('filterPriority').value;
+      const risk = document.getElementById('filterRisk').value;
+      const agent = document.getElementById('filterAgent').value;
+      const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+      state.filteredTickets = state.tickets.filter(t => {
+        if (cat !== 'ALL' && t.category !== cat) return false;
+        if (pri !== 'ALL' && t.priority !== pri) return false;
+        if (agent !== 'ALL' && t.assigned_agent !== agent) return false;
+
+        if (risk === 'OPEN' && (t.status === 'Closed' || t.isResolvedLive)) return false;
+        if (risk === 'ESCALATED' && t.escalated_to_eng !== 'Yes') return false;
+        if (risk === 'RESOLVED_L1' && !t.isResolvedLive) return false;
+        if (risk === 'HIGH_RISK') {
+          const desc = (t.description || '').toLowerCase();
+          const isHighRisk = desc.includes('cutoff') || desc.includes('date range') || 
+                             desc.includes('> 15 days') || desc.includes('stuck at loading') ||
+                             desc.includes('insurance expired') || desc.includes('frozen') ||
+                             desc.includes('gps') || desc.includes('duplicate');
+          if (!isHighRisk) return false;
+        }
+
+        if (search) {
+          const text = `${t.ticket_id} ${t.client_name} ${t.client_id} ${t.category} ${t.description}`.toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+
+        return true;
+      });
+
+      renderFeedCards();
+    }
+
+    // Render Clean Left Feed Cards
+    function renderFeedCards() {
+      const container = document.getElementById('ticketCardsList');
+      container.innerHTML = '';
+
+      if (state.filteredTickets.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">No matching tickets in queue.</div>`;
+        return;
+      }
+
+      const displayList = state.filteredTickets.slice(0, 50);
+
+      displayList.forEach((t, idx) => {
+        const isSelected = state.selectedTicket && state.selectedTicket.ticket_id === t.ticket_id;
+        const card = document.createElement('div');
+        
+        let cardBgBorder = isSelected 
+          ? 'bg-white border-slate-900 ring-1 ring-slate-900' 
+          : 'bg-white hover:border-slate-300 border-slate-200';
+
+        if (t.isResolvedLive) {
+          cardBgBorder = isSelected
+            ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600'
+            : 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300';
+        }
+
+        card.className = `rounded-2xl border transition p-4 cursor-pointer text-xs space-y-2.5 shadow-sm ${cardBgBorder}`;
+        card.onclick = () => {
+          state.selectedIndex = idx;
+          selectTicket(t);
+        };
+
+        const pBadgeColor = t.isResolvedLive
+          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold'
+          : (t.priority === 'P1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+             t.priority === 'P2' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+             'bg-slate-100 text-slate-700 border-slate-200');
+
+        const statusTag = t.isResolvedLive 
+          ? '✅ Resolved at L1' 
+          : t.priority;
+
+        card.innerHTML = `
+          <!-- Top Row -->
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 font-semibold text-slate-800">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 font-mono font-bold text-xs text-slate-900">${t.ticket_id}</span>
+              <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs">${t.channel || 'Portal'}</span>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg border font-bold uppercase text-xs ${pBadgeColor}">
+              ${statusTag}
+            </span>
+          </div>
+
+          <!-- Bold Problem Dialogue/Text Quote -->
+          <div class="font-bold text-slate-900 text-sm line-clamp-2 leading-snug">
+            "${t.description}"
+          </div>
+
+          <!-- Bottom: Client Name + Category -->
+          <div class="flex items-center justify-between pt-1 text-xs text-slate-500">
+            <span class="font-bold text-slate-800 truncate max-w-[200px]">${t.client_name}</span>
+            <span class="text-slate-500 font-medium">${(t.category || '').split('/')[0]}</span>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      updateIndexDisplay();
+
+      if (!state.selectedTicket || !state.filteredTickets.find(x => x.ticket_id === state.selectedTicket.ticket_id)) {
+        state.selectedIndex = 0;
+        selectTicket(displayList[0]);
+      }
+    }
+
+    function updateIndexDisplay() {
+      const total = state.filteredTickets.length;
+      const current = total > 0 ? state.selectedIndex + 1 : 0;
+      document.getElementById('queueIndexDisplay').innerText = `${current} of ${total}`;
+    }
+
+    function prevTicket() {
+      if (state.selectedIndex > 0) {
+        state.selectedIndex--;
+        selectTicket(state.filteredTickets[state.selectedIndex]);
+      }
+    }
+
+    function nextTicket() {
+      if (state.selectedIndex < state.filteredTickets.length - 1) {
+        state.selectedIndex++;
+        selectTicket(state.filteredTickets[state.selectedIndex]);
+      }
+    }
+
+    // Select Ticket & Populate Detail View
+    function selectTicket(t) {
+      if (!t) return;
+      state.selectedTicket = t;
+
+      document.getElementById('inspTicketIdTitle').innerText = t.ticket_id;
+      document.getElementById('inspPriorityTag').innerText = `${t.priority} Priority`;
+      
+      const statusPill = document.getElementById('inspStatusPill');
+      if (t.isResolvedLive) {
+        statusPill.innerText = '✅ Resolved at L1 (Deflected)';
+        statusPill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300';
+      } else {
+        statusPill.innerText = t.status || 'Open - with L1';
+        statusPill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200';
+      }
+
+      document.getElementById('inspTitleQuote').innerText = `"${t.description}"`;
+      document.getElementById('inspClientFull').innerText = `${t.client_name} (${t.client_id || 'CL-000'})`;
+      document.getElementById('inspTier').innerText = t.client_tier || 'Enterprise';
+      document.getElementById('inspCategoryPill').innerText = t.category;
+      document.getElementById('inspAgentName').innerText = `Assigned: ${t.assigned_agent}`;
+
+      analyzeTicketDiagnostic(t);
+
+      document.getElementById('chk1').checked = false;
+      document.getElementById('chk2').checked = false;
+      document.getElementById('chk3').checked = false;
+      evaluateGatekeeper();
+
+      updateIndexDisplay();
+
+      // Silent card outline toggle
+      const container = document.getElementById('ticketCardsList');
+      Array.from(container.children).forEach((child, i) => {
+        const item = state.filteredTickets[i];
+        if (!item) return;
+        const isCurrent = i === state.selectedIndex;
+        if (item.isResolvedLive) {
+          child.className = `rounded-2xl border transition p-4 cursor-pointer text-xs space-y-2.5 shadow-sm ${
+            isCurrent ? 'bg-emerald-50 border-emerald-600 ring-1 ring-emerald-600' : 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300'
+          }`;
+        } else {
+          child.className = `rounded-2xl border transition p-4 cursor-pointer text-xs space-y-2.5 shadow-sm ${
+            isCurrent ? 'bg-white border-slate-900 ring-1 ring-slate-900' : 'bg-white hover:border-slate-300 border-slate-200'
+          }`;
+        }
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Diagnostic Brain
+    function analyzeTicketDiagnostic(t) {
+      const desc = (t.description || '').toLowerCase();
+      let isConfig = false;
+      let title = '';
+      let text = '';
+      let action = '';
+
+      if (desc.includes('cutoff')) {
+        isConfig = true;
+        title = 'Shift Booking Cutoff Mismatch (Known Client Configuration)';
+        text = 'Client admin updated shift cutoff settings in the HR portal, but employee bookings occurred past the cutoff window. This is NOT a software bug.';
+        action = 'Advise corporate admin to approve late exception, or use the Shift Cutoff Sync tool in Run Studio to resolve immediately.';
+      } else if (desc.includes('date range') || desc.includes('> 15 days') || desc.includes('stuck at loading')) {
+        isConfig = true;
+        title = 'Report Export Query Timeout (>14 Day GPS Join)';
+        text = 'Database join timeout caused by requesting >14 days of raw GPS coordinate streams. Operational usage limit, not an engineering crash.';
+        action = 'Advise client admin to export report in 7-day or 10-day intervals, or partition via Run Studio (finishes in 4s).';
+      } else if (desc.includes('insurance expired') || desc.includes('compliance')) {
+        isConfig = true;
+        title = 'Vendor Vehicle Document Expired / Blocked';
+        text = 'Vehicle blocked automatically by RideOps safety engine due to expired fitness/insurance certificates. Engineering cannot override legal safety rules.';
+        action = 'Notify Vendor Ops team to upload renewed insurance document in the Vendor Portal.';
+      } else if (desc.includes('frozen') || desc.includes('gps') || desc.includes('tracking')) {
+        isConfig = false;
+        title = 'Missing Device Telemetry Logs';
+        text = 'Telemetry signal ping missing. Historically, 89% of GPS tickets escalated without driver phone & vehicle ID are returned by Sandeep\'s team.';
+        action = 'Collect driver phone number, cab license plate, and check driver app battery saver setting before escalating.';
+      } else {
+        isConfig = false;
+        title = 'Legitimate Bug Investigation: Mandatory Verification';
+        text = 'Potential code issue. Complete all pre-flight verification items before handoff to Engineering.';
+        action = 'Attach client error screenshots and exact reproduction steps.';
+      }
+
+      state.currentTicketIsConfig = isConfig;
+      document.getElementById('diagCalloutTitle').innerText = title;
+      document.getElementById('diagCalloutText').innerText = text;
+      document.getElementById('diagCalloutAction').innerText = action;
+    }
+
+    // Gatekeeper Checklist Evaluation
+    function evaluateGatekeeper() {
+      const c1 = document.getElementById('chk1').checked;
+      const c2 = document.getElementById('chk2').checked;
+      const c3 = document.getElementById('chk3').checked;
+      const isConfig = state.currentTicketIsConfig;
+
+      const btn = document.getElementById('btnEscalate');
+      const icon = document.getElementById('iconEscalate');
+      const text = document.getElementById('textEscalate');
+      const hint = document.getElementById('hintEscalate');
+
+      const canEscalate = c1 && c2 && c3 && !isConfig;
+
+      if (canEscalate) {
+        btn.disabled = false;
+        btn.className = 'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border transition shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 cursor-pointer';
+        icon.setAttribute('data-lucide', 'unlock');
+        text.innerText = '🟢 Escalate to Eng with Verified Dossier';
+        hint.innerText = '✓ All pre-flight criteria satisfied. Sandeep\'s queue unlocked.';
+        hint.className = 'text-xs text-emerald-700 mt-1.5 text-center font-bold';
+      } else {
+        btn.disabled = true;
+        btn.className = 'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border transition shadow-sm bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed';
+        icon.setAttribute('data-lucide', 'lock');
+        text.innerText = '🔒 Escalate to Eng (Locked)';
+        
+        if (isConfig) {
+          hint.innerText = '⚠️ Escalation disabled: Client configuration issue. Resolve via L1 action.';
+          hint.className = 'text-xs text-amber-800 mt-1.5 text-center font-bold';
+        } else {
+          hint.innerText = '⚠️ Complete all 3 checklist items above to unlock.';
+          hint.className = 'text-xs text-slate-500 mt-1.5 text-center font-medium';
+        }
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function handleEscalate() {
+      showToast('Escalated to Engineering', `Ticket ${state.selectedTicket.ticket_id} submitted with full verified dossier.`);
+    }
+
+    // LIVE INTERACTIVE TICKET RESOLUTION: Actually updates state in memory!
+    function handleL1Resolve() {
+      if (!state.selectedTicket) return;
+
+      // Mutate ticket status live
+      state.selectedTicket.isResolvedLive = true;
+      state.selectedTicket.status = 'Closed - Resolved at L1';
+      state.deflectedCount++;
+
+      // Update Header KPI
+      document.getElementById('statDeflectedLive').innerText = state.deflectedCount;
+
+      // Update remaining open backlog count for both sidebar and filter bar
+      updateBacklogCounters();
+
+      // Update inspector pill
+      const statusPill = document.getElementById('inspStatusPill');
+      statusPill.innerText = '✅ Resolved at L1 (Deflected)';
+      statusPill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300';
+
+      // Re-render feed card to show green resolved state
+      renderFeedCards();
+
+      showToast('Resolved at L1 in 8 Mins! 🎉', `Ticket ${state.selectedTicket.ticket_id} resolved! Saved ~128 hours of bounce delay.`);
+    }
+
+    function applyRosterSync() {
+      const client = document.getElementById('qfClientSelect').value;
+      const el = document.getElementById('rosterResultMsg');
+      el.classList.remove('hidden');
+      el.innerText = `✅ Cutoff synced for ${client}. 16 pending bookings injected into tomorrow's roster. Ticket resolved!`;
+      showToast('Roster Cutoff Synced', `16 employee bookings injected for ${client}.`);
+      handleL1Resolve();
+    }
+
+    function runReportPartition() {
+      const el = document.getElementById('partitionResult');
+      el.classList.remove('hidden');
+      el.innerText = '✅ Query split into 3 batches: [Aug 1-10], [Aug 11-20], [Aug 21-31]. Export links generated in 4s!';
+      showToast('Report Partitioned', '3 batches generated in 4 seconds.');
+      handleL1Resolve();
+    }
+
+    function runGeocodeValidator() {
+      const el = document.getElementById('geocodeResult');
+      el.classList.remove('hidden');
+      el.innerText = '✅ Coordinates re-anchored: Lat 12.9716, Long 77.5946 for 33 linked profiles.';
+      showToast('Coordinates Updated', 'Re-anchored Lat 12.9716, Long 77.5946.');
+      handleL1Resolve();
+    }
+
+    function showToast(title, msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastTitle').innerText = title;
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // 1-Click Export of the active queue to CSV
+    function exportTriageReport() {
+      if (!state.filteredTickets || state.filteredTickets.length === 0) {
+        showToast('Export Empty', 'No tickets matching current filters to export.');
+        return;
+      }
+      const rows = state.filteredTickets.map(t => ({
+        ticket_id: t.ticket_id,
+        created_at: t.created_at,
+        channel: t.channel,
+        client_name: t.client_name,
+        client_tier: t.client_tier,
+        category: t.category,
+        priority: t.priority,
+        description: t.description,
+        assigned_agent: t.assigned_agent,
+        escalated_to_eng: t.escalated_to_eng,
+        status: t.isResolvedLive ? 'Resolved at L1' : t.status,
+        res_hours: t.res_hrs
+      }));
+
+      const csv = Papa.unparse(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `RideOps_Triage_Export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Queue Exported", `Downloaded ${rows.length} tickets as CSV.`);
+    }
+
+    // Keyboard Shortcuts for L1 Agent Navigation
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        nextTicket();
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        prevTicket();
+      } else if (e.key === 'ArrowRight' && !document.getElementById('view-deck').classList.contains('hidden')) {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' && !document.getElementById('view-deck').classList.contains('hidden')) {
+        prevSlide();
+      }
+    });
+
+    // Deck Slide controls
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > state.totalSlides) n = state.totalSlides;
+      state.currentSlide = n;
+
+      document.querySelectorAll('.slide-item').forEach(el => el.classList.add('hidden'));
+      const active = document.getElementById(`deck-${n}`);
+      if (active) active.classList.remove('hidden');
+
+      document.getElementById('deckSlideNum').innerText = `Slide ${n} of ${state.totalSlides}`;
+    }
+
+    function prevSlide() { showSlide(state.currentSlide - 1); }
+    function nextSlide() { showSlide(state.currentSlide + 1); }
+
+    // Simulator
+    function updateSimulator(val) {
+      const targetPct = parseInt(val);
+      document.getElementById('sliderValDisplay').innerText = `${targetPct}%`;
+
+      const annualAvoidable = 275 * 4;
+      const deflected = Math.round(annualAvoidable * (targetPct / 100));
+      const hours = Math.round(deflected * 5.5);
+      const fte = (hours / 1800).toFixed(1);
+      const backlog = Math.round(50 * (1 - (targetPct / 100) * 0.7));
+
+      document.getElementById('simTickets').innerText = deflected.toLocaleString();
+      document.getElementById('simHours').innerText = `${hours.toLocaleString()} hrs`;
+      document.getElementById('simFTE').innerText = `${fte} Eng`;
+      document.getElementById('simBacklog').innerText = `50 → ${backlog}`;
+
+      if (state.charts.sim) {
+        state.charts.sim.data.datasets[1].data = [
+          Math.round(86.8 * (1 - (targetPct / 100) * 0.75)),
+          Math.max(8, Math.round(56.6 * (1 - (targetPct / 100))))
+        ];
+        state.charts.sim.update();
+      }
+    }
+
+    // Dynamic Analytics & Charts (Fully recalculated on ANY loaded/uploaded CSV)
+    function updateAnalyticsAndCharts() {
+      if (!state.tickets || state.tickets.length === 0) return;
+
+      const total = state.tickets.length;
+      const escTickets = state.tickets.filter(t => t.escalated_to_eng === 'Yes');
+      const escCount = escTickets.length;
+      const escRate = ((escCount / total) * 100).toFixed(1);
+
+      // Avoidable non-bugs (escalated but outcome is not 'Fixed')
+      const avoidableTickets = escTickets.filter(t => t.eng_outcome && t.eng_outcome !== 'Fixed');
+      const avoidableCount = avoidableTickets.length;
+      const avoidableRate = escCount > 0 ? ((avoidableCount / escCount) * 100).toFixed(1) : 0;
+
+      // Update KPI cards in Command Center
+      const kpiTotal = document.getElementById('kpiTotalInflow');
+      if (kpiTotal) kpiTotal.innerText = total.toLocaleString();
+
+      const kpiEscRateEl = document.getElementById('kpiEscRate');
+      if (kpiEscRateEl) kpiEscRateEl.innerText = `${escRate}%`;
+
+      const kpiEscCountEl = document.getElementById('kpiEscCount');
+      if (kpiEscCountEl) kpiEscCountEl.innerText = `${escCount} tickets sent to Eng`;
+
+      const kpiAvoidRateEl = document.getElementById('kpiAvoidableRate');
+      if (kpiAvoidRateEl) kpiAvoidRateEl.innerText = `${avoidableRate}%`;
+
+      const kpiAvoidCountEl = document.getElementById('kpiAvoidableCount');
+      if (kpiAvoidCountEl) kpiAvoidCountEl.innerText = `${avoidableCount} not legitimate bugs`;
+
+      // 1. Dynamic Monthly Inflow
+      const monthsMap = {};
+      state.tickets.forEach(t => {
+        const m = (t.created_at || '').substring(0, 7);
+        if (!m) return;
+        if (!monthsMap[m]) monthsMap[m] = { total: 0, esc: 0 };
+        monthsMap[m].total++;
+        if (t.escalated_to_eng === 'Yes') monthsMap[m].esc++;
+      });
+      const monthKeys = Object.keys(monthsMap).sort();
+      const monthNames = { '01':'Jan', '02':'Feb', '03':'Mar', '04':'Apr', '05':'May', '06':'Jun', '07':'July', '08':'August', '09':'September', '10':'October', '11':'Nov', '12':'Dec' };
+      const monthLabels = monthKeys.map(k => {
+        const parts = k.split('-');
+        return `${monthNames[parts[1]] || parts[1]} ${parts[0]}`;
+      });
+      const monthTotals = monthKeys.map(k => monthsMap[k].total);
+      const monthEscs = monthKeys.map(k => monthsMap[k].esc);
+
+      const ctx1 = document.getElementById('chartMonthlyInflow').getContext('2d');
+      if (state.charts.monthly) state.charts.monthly.destroy();
+      state.charts.monthly = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: monthLabels.length ? monthLabels : ['July 2026', 'August 2026', 'September 2026'],
+          datasets: [
+            { label: 'Total Inflow', data: monthTotals.length ? monthTotals : [390, 462, 592], backgroundColor: '#E2E8F0', borderRadius: 8 },
+            { label: 'Escalated to Eng', data: monthEscs.length ? monthEscs : [146, 151, 189], backgroundColor: '#0F172A', borderRadius: 8 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Inter' } } } },
+          scales: {
+            y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11, family: 'Inter' } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold', family: 'Inter' } } }
+          }
+        }
+      });
+
+      // 2. Dynamic Escalation Outcomes
+      let fixedCount = 0, insuffCount = 0, configCount = 0, dupCount = 0, otherCount = 0;
+      escTickets.forEach(t => {
+        const o = (t.eng_outcome || '').toLowerCase();
+        if (o === 'fixed') fixedCount++;
+        else if (o.includes('insufficient')) insuffCount++;
+        else if (o.includes('config')) configCount++;
+        else if (o.includes('duplicate')) dupCount++;
+        else otherCount++;
+      });
+
+      const ctx2 = document.getElementById('chartEscalationOutcomes').getContext('2d');
+      if (state.charts.outcomes) state.charts.outcomes.destroy();
+      state.charts.outcomes = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Fixed (Bug)', 'Insufficient Info', 'Config Issue', 'Duplicate', 'How-to / Other'],
+          datasets: [{
+            data: escCount > 0 ? [fixedCount, insuffCount, configCount, dupCount, otherCount] : [211, 89, 84, 56, 46],
+            backgroundColor: ['#10B981', '#EF4444', '#E8A72D', '#6366F1', '#94A3B8'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11, family: 'Inter' } } } },
+          cutout: '65%'
+        }
+      });
+
+      // 3. Dynamic Resolution Medians
+      function getMedian(arr) {
+        if (!arr.length) return 12.6;
+        const s = [...arr].sort((a,b) => a - b);
+        const mid = Math.floor(s.length / 2);
+        return s.length % 2 !== 0 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+      }
+      const l1Res = state.tickets.filter(t => t.escalated_to_eng === 'No').map(t => t.res_hrs);
+      const engFixRes = escTickets.filter(t => (t.eng_outcome || '').toLowerCase() === 'fixed').map(t => t.res_hrs);
+      const insuffRes = escTickets.filter(t => (t.eng_outcome || '').toLowerCase().includes('insufficient')).map(t => t.res_hrs);
+      const configRes = escTickets.filter(t => (t.eng_outcome || '').toLowerCase().includes('config')).map(t => t.res_hrs);
+
+      const m1 = getMedian(l1Res).toFixed(1);
+      const m2 = getMedian(engFixRes).toFixed(1);
+      const m3 = getMedian(insuffRes).toFixed(1);
+      const m4 = getMedian(configRes).toFixed(1);
+
+      const ctx3 = document.getElementById('chartResolutionTimes').getContext('2d');
+      if (state.charts.resTimes) state.charts.resTimes.destroy();
+      state.charts.resTimes = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: ['L1 Resolved', 'Eng Bug Fix', 'Insufficient Info', 'Config Issue'],
+          datasets: [{
+            axis: 'y',
+            data: [m1, m2, m3, m4],
+            backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11, family: 'Inter' } } },
+            y: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold', family: 'Inter' } } }
+          }
+        }
+      });
+
+      // 4. Dynamic Pareto Categories
+      const catCountMap = {};
+      escTickets.forEach(t => {
+        const c = (t.category || 'Other').split('/')[0].trim();
+        catCountMap[c] = (catCountMap[c] || 0) + 1;
+      });
+      const topCats = Object.entries(catCountMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      const paretoLabels = topCats.length ? topCats.map(x => x[0]) : ['Roster sync', 'Live tracking', 'Report export', 'Cab delay', 'Login issue'];
+      const paretoData = topCats.length ? topCats.map(x => x[1]) : [175, 127, 77, 34, 21];
+
+      const ctx4 = document.getElementById('chartCategoryPareto').getContext('2d');
+      if (state.charts.pareto) state.charts.pareto.destroy();
+      state.charts.pareto = new Chart(ctx4, {
+        type: 'bar',
+        data: {
+          labels: paretoLabels,
+          datasets: [{
+            data: paretoData,
+            backgroundColor: '#0F172A',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 11, family: 'Inter' } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Inter' } } }
+          }
+        }
+      });
+
+      // 5. Dynamic Agent Matrix
+      const agentMap = {};
+      state.tickets.forEach(t => {
+        const a = t.assigned_agent || 'General Support';
+        if (!agentMap[a]) agentMap[a] = { count: 0, esc: 0, reopens: 0, csatSum: 0, csatCount: 0 };
+        agentMap[a].count++;
+        if (t.escalated_to_eng === 'Yes') agentMap[a].esc++;
+        agentMap[a].reopens += (Number(t.reopen_count) || 0);
+        const csat = Number(t.csat_score) || 0;
+        if (csat > 0) {
+          agentMap[a].csatSum += csat;
+          agentMap[a].csatCount++;
+        }
+      });
+
+      const tbody = document.getElementById('agentMatrixBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        Object.keys(agentMap).sort((a,b) => agentMap[b].count - agentMap[a].count).forEach(agentName => {
+          const d = agentMap[agentName];
+          const escP = ((d.esc / d.count) * 100).toFixed(1);
+          const reopenP = (d.reopens / d.count).toFixed(2);
+          const csatAvg = d.csatCount > 0 ? (d.csatSum / d.csatCount).toFixed(2) : '3.80';
+          
+          let coachingTag = '<span class="text-slate-500 font-medium">Standard guidance</span>';
+          let rowClass = '';
+          if (Number(escP) > 50) {
+            coachingTag = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">High Escalation: Train on pre-flight checks</span>';
+            rowClass = 'bg-amber-50/40';
+          } else if (Number(reopenP) > 0.20) {
+            coachingTag = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">High Reopen: Coach on root cause verification</span>';
+            rowClass = 'bg-amber-50/40';
+          } else if (Number(csatAvg) >= 3.90) {
+            coachingTag = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">High CSAT Leader</span>';
+          }
+
+          const tr = document.createElement('tr');
+          if (rowClass) tr.className = rowClass;
+          tr.innerHTML = `
+            <td class="py-3 px-3.5 font-bold text-slate-900">${agentName}</td>
+            <td class="py-3 px-3.5 font-mono text-slate-700">${d.count}</td>
+            <td class="py-3 px-3.5 font-mono font-bold ${Number(escP) > 50 ? 'text-rose-600' : 'text-slate-800'}">${escP}%</td>
+            <td class="py-3 px-3.5 font-mono ${Number(reopenP) > 0.20 ? 'font-bold text-rose-600' : 'text-slate-700'}">${reopenP}</td>
+            <td class="py-3 px-3.5 font-mono font-bold text-slate-800">${csatAvg}</td>
+            <td class="py-3 px-3.5">${coachingTag}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Dynamic Simulator
+    function initSimulator() {
+      const ctxSim = document.getElementById('chartSimulator').getContext('2d');
+      if (state.charts.sim) state.charts.sim.destroy();
+      state.charts.sim = new Chart(ctxSim, {
+        type: 'bar',
+        data: {
+          labels: ['Turnaround (Hours)', 'Rejection Rate (%)'],
+          datasets: [
+            { label: 'Current Reality', data: [86.8, 56.6], backgroundColor: '#EF4444', borderRadius: 6 },
+            { label: 'With Gatekeeper v0', data: [18.5, 12.0], backgroundColor: '#10B981', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Inter' } } } },
+          scales: {
+            y: { grid: { color: '#E2E8F0' }, ticks: { font: { size: 11, family: 'Inter' } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold', family: 'Inter' } } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
