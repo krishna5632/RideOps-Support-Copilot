@@ -4,7 +4,7 @@ import {
   Columns2,
   Zap,
   BarChart3,
-  FileText,
+  Activity,
   Inbox,
   UserCheck,
   PanelLeftClose,
@@ -19,7 +19,7 @@ export default function Sidebar() {
     { id: 'triage', label: 'Review Desk', icon: Columns2 },
     { id: 'quickfix', label: 'Run Studio (Quick-Fix)', icon: Zap },
     { id: 'analytics', label: 'Command Center', icon: BarChart3 },
-    { id: 'deck', label: 'Executive Deck', icon: FileText }
+    { id: 'diagnosis', label: 'Root-Cause Analysis', icon: Activity }
   ];
 
   return (

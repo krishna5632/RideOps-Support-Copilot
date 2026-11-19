@@ -225,14 +225,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+import os
+
 # 1. Load Data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('rideops_support_tickets.csv')
-    df['created_at'] = pd.to_datetime(df['created_at'])
-    df['final_closed_at'] = pd.to_datetime(df['final_closed_at'])
-    df['resolution_hrs'] = (df['final_closed_at'] - df['created_at']).dt.total_seconds() / 3600.0
-    return df
+    candidates = [
+        os.path.join(os.path.dirname(__file__), 'data', 'rideops_support_tickets.csv'),
+        'rideops_support_tickets.csv',
+        os.path.join('backend', 'data', 'rideops_support_tickets.csv')
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            df = pd.read_csv(p)
+            df['created_at'] = pd.to_datetime(df['created_at'])
+            df['final_closed_at'] = pd.to_datetime(df['final_closed_at'])
+            df['resolution_hrs'] = (df['final_closed_at'] - df['created_at']).dt.total_seconds() / 3600.0
+            return df
+    raise FileNotFoundError("Could not locate rideops_support_tickets.csv")
 
 try:
     df = load_data()

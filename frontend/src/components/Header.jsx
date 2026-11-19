@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useTickets } from '../context/TicketContext';
-import { Upload, Download, RotateCcw, FileSpreadsheet, BarChart3 } from 'lucide-react';
+import { Upload, Download, RotateCcw, FileSpreadsheet } from 'lucide-react';
 
 export default function Header() {
   const {
@@ -8,7 +8,6 @@ export default function Header() {
     tickets,
     isCustomDataset,
     activeDatasetName,
-    setIsDeepAnalysisOpen,
     resetToDefault,
     handleFileUpload,
     exportQueueCsv
@@ -20,6 +19,7 @@ export default function Header() {
     triage: 'Review Desk',
     quickfix: 'Run Studio',
     analytics: 'Command Center',
+    diagnosis: 'Root-Cause Analysis',
     deck: 'Executive Deck'
   };
 
@@ -83,17 +83,6 @@ export default function Header() {
           onChange={onFileChange}
           className="hidden"
         />
-
-        {/* Diagnostic Findings Button */}
-        <button
-          onClick={() => setIsDeepAnalysisOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition shadow-sm cursor-pointer"
-          title="Open Root-Cause Diagnostic Findings (8 Clean Diagrams)"
-        >
-          <BarChart3 className="w-4 h-4 text-amber-500" />
-          <span className="hidden sm:inline">Diagnostic Findings</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold">8</span>
-        </button>
 
         {/* Upload Custom CSV Button */}
         <button

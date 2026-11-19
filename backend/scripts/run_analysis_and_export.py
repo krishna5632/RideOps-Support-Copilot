@@ -17,8 +17,25 @@ plt.rcParams['figure.dpi'] = 140
 print("Running senior data analyst workflow...")
 
 # 1. Load data
-df = pd.read_csv('rideops_support_tickets.csv')
-data_dict = pd.read_csv('rideops_data_dictionary.csv')
+def find_file(candidates):
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return candidates[0]
+
+tickets_path = find_file([
+    os.path.join(os.path.dirname(__file__), '..', 'data', 'rideops_support_tickets.csv'),
+    'backend/data/rideops_support_tickets.csv',
+    'rideops_support_tickets.csv'
+])
+dict_path = find_file([
+    os.path.join(os.path.dirname(__file__), '..', 'data', 'rideops_data_dictionary.csv'),
+    'backend/data/rideops_data_dictionary.csv',
+    'rideops_data_dictionary.csv'
+])
+
+df = pd.read_csv(tickets_path)
+data_dict = pd.read_csv(dict_path)
 
 # Conversions
 datetime_cols = ['created_at', 'first_response_at', 'first_closed_at', 'final_closed_at']

@@ -7,7 +7,7 @@ import RoiSimulator from './RoiSimulator';
 import AgentMatrix from './AgentMatrix';
 
 export default function CommandCenter() {
-  const { setIsDeepAnalysisOpen, activeDatasetName } = useTickets();
+  const { setActiveTab, activeDatasetName } = useTickets();
 
   return (
     <section className="space-y-6">
@@ -40,7 +40,7 @@ export default function CommandCenter() {
         </div>
 
         <button
-          onClick={() => setIsDeepAnalysisOpen(true)}
+          onClick={() => setActiveTab('diagnosis')}
           className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer whitespace-nowrap"
         >
           <span>View 8 Diagnostic Diagrams</span>

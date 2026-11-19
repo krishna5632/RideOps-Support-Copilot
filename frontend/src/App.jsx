@@ -6,8 +6,8 @@ import Toast from './components/Toast';
 import ReviewDesk from './components/ReviewDesk/ReviewDesk';
 import RunStudio from './components/RunStudio/RunStudio';
 import CommandCenter from './components/CommandCenter/CommandCenter';
+import DeepDiagnosis from './components/DeepDiagnosis/DeepDiagnosis';
 import ExecutiveDeck from './components/ExecutiveDeck/ExecutiveDeck';
-import DeepAnalysisModal from './components/DeepAnalysisModal';
 
 export default function App() {
   const { activeTab } = useTickets();
@@ -21,10 +21,10 @@ export default function App() {
           {activeTab === 'triage' && <ReviewDesk />}
           {activeTab === 'quickfix' && <RunStudio />}
           {activeTab === 'analytics' && <CommandCenter />}
+          {activeTab === 'diagnosis' && <DeepDiagnosis />}
           {activeTab === 'deck' && <ExecutiveDeck />}
         </main>
       </div>
-      <DeepAnalysisModal />
       <Toast />
     </div>
   );

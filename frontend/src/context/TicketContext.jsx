@@ -13,7 +13,6 @@ export function TicketProvider({ children }) {
   const [isBacklogFiltered, setIsBacklogFiltered] = useState(false);
   const [isCustomDataset, setIsCustomDataset] = useState(false);
   const [activeDatasetName, setActiveDatasetName] = useState('Default Q3 (1,444 Tickets)');
-  const [isDeepAnalysisOpen, setIsDeepAnalysisOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
   // Filters
@@ -103,7 +102,6 @@ export function TicketProvider({ children }) {
       complete: (results) => {
         if (results.data && results.data.length > 0) {
           loadDataset(results.data, `Uploaded: ${file.name} (${results.data.length} tickets)`, true, file.name);
-          setIsDeepAnalysisOpen(true);
         } else {
           alert('Uploaded CSV file was empty or improperly formatted.');
         }
@@ -281,8 +279,6 @@ export function TicketProvider({ children }) {
         filterToBacklogOnly,
         isCustomDataset,
         activeDatasetName,
-        isDeepAnalysisOpen,
-        setIsDeepAnalysisOpen,
         resetToDefault,
         handleFileUpload,
         resolveTicketLive,

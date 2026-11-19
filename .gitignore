@@ -11,6 +11,8 @@ __pycache__/
 .venv/
 venv/
 ENV/
+.matplotlib_cache/
+.ipynb_checkpoints/
 
 # OS and Editor files
 .DS_Store

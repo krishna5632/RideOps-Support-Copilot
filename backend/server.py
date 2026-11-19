@@ -11,7 +11,8 @@ import os
 import sys
 
 PORT = 8000
-DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIRECTORY = REPO_ROOT if os.path.exists(os.path.join(REPO_ROOT, "index.html")) else os.path.dirname(os.path.abspath(__file__))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
