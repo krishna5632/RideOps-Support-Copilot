@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useTickets } from '../context/TicketContext';
-import { Upload, Download, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { Upload, Download, RotateCcw, FileSpreadsheet, BarChart3 } from 'lucide-react';
 
 export default function Header() {
   const {
@@ -8,6 +8,7 @@ export default function Header() {
     tickets,
     isCustomDataset,
     activeDatasetName,
+    setIsDeepAnalysisOpen,
     resetToDefault,
     handleFileUpload,
     exportQueueCsv
@@ -82,6 +83,17 @@ export default function Header() {
           onChange={onFileChange}
           className="hidden"
         />
+
+        {/* Deep Analysis Button */}
+        <button
+          onClick={() => setIsDeepAnalysisOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition shadow-sm cursor-pointer"
+          title="Open Deep Operational Diagnosis (8 Visual Figures & Explanations)"
+        >
+          <BarChart3 className="w-3.5 h-3.5 text-amber-700" />
+          <span className="hidden sm:inline">Deep Diagnosis</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-extrabold">8 Charts</span>
+        </button>
 
         {/* Upload Custom CSV Button */}
         <button

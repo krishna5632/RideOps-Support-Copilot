@@ -7,6 +7,7 @@ import ReviewDesk from './components/ReviewDesk/ReviewDesk';
 import RunStudio from './components/RunStudio/RunStudio';
 import CommandCenter from './components/CommandCenter/CommandCenter';
 import ExecutiveDeck from './components/ExecutiveDeck/ExecutiveDeck';
+import DeepAnalysisModal from './components/DeepAnalysisModal';
 
 export default function App() {
   const { activeTab } = useTickets();
@@ -23,6 +24,7 @@ export default function App() {
           {activeTab === 'deck' && <ExecutiveDeck />}
         </main>
       </div>
+      <DeepAnalysisModal />
       <Toast />
     </div>
   );
