@@ -18,33 +18,33 @@ export default function CommandCenter() {
         </p>
       </div>
 
-      {/* Deep Diagnosis Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm border border-slate-700">
+      {/* Root-Cause Diagnostic Banner */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center font-extrabold shadow-sm">
-            <BarChart3 className="w-6 h-6 text-slate-950" />
+          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-sm">
+            RO
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-extrabold text-white">
-                Deep Statistical Diagnosis & Jupyter Root-Cause Models
+              <h2 className="text-sm font-extrabold text-slate-900">
+                Root-Cause Diagnostic Findings
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                8 Visual Figures Ready
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                8 Clean Diagrams
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Active: <b className="text-amber-300">{activeDatasetName}</b> — Explore 8 empirical figures proving Sandeep's 56.6% waste, Meera's 5-day delay, and CSAT regression models.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Empirical insights on inflow surge, 56.6% triage waste, 5-day cycle time delay, and CSAT drivers for <b className="text-slate-800">{activeDatasetName}</b>.
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setIsDeepAnalysisOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer whitespace-nowrap"
+          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer whitespace-nowrap"
         >
-          <span>Open 8 Diagnostic Figures</span>
-          <ArrowRight className="w-4 h-4" />
+          <span>View 8 Diagnostic Diagrams</span>
+          <ArrowRight className="w-4 h-4 text-amber-400" />
         </button>
       </div>
 

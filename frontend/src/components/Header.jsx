@@ -84,15 +84,15 @@ export default function Header() {
           className="hidden"
         />
 
-        {/* Deep Analysis Button */}
+        {/* Diagnostic Findings Button */}
         <button
           onClick={() => setIsDeepAnalysisOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition shadow-sm cursor-pointer"
-          title="Open Deep Operational Diagnosis (8 Visual Figures & Explanations)"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition shadow-sm cursor-pointer"
+          title="Open Root-Cause Diagnostic Findings (8 Clean Diagrams)"
         >
-          <BarChart3 className="w-3.5 h-3.5 text-amber-700" />
-          <span className="hidden sm:inline">Deep Diagnosis</span>
-          <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-extrabold">8 Charts</span>
+          <BarChart3 className="w-4 h-4 text-amber-500" />
+          <span className="hidden sm:inline">Diagnostic Findings</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold">8</span>
         </button>
 
         {/* Upload Custom CSV Button */}
