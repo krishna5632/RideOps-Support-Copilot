@@ -43,12 +43,16 @@ This starts a local server on port 8000 and opens your browser at `http://localh
 ---
 
 ### Method 4: Docker Container (Production Nginx Build) 🐳
-Build and run the containerized application with Docker:
+Build and run with Docker Compose:
+```bash
+docker compose up -d
+```
+Or run directly:
 ```bash
 docker build -t rideops-support-copilot .
-docker run -d -p 8080:80 --name rideops-app rideops-support-copilot
+docker run -d -p 8081:80 --name rideops-app rideops-support-copilot
 ```
-Open **`http://localhost:8080`** in your browser. Powered by multi-stage Node 20 builder and optimized Nginx Alpine static serving with client-side SPA routing.
+Open **`http://localhost:8081`** in your browser. Powered by multi-stage Node 20 builder and optimized Nginx Alpine static serving with client-side SPA routing.
 
 ---
 
