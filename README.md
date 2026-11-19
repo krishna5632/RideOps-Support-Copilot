@@ -1,5 +1,7 @@
 # 🚕 RideOps Support Copilot & Pre-Escalation Gatekeeper
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/krishna5632/RideOps-Support-Copilot)
+
 A production-grade operational support intelligence hub, pre-escalation gatekeeper, and empirical root-cause diagnostic system built for the **RideOps Corporate Support Case Study**.
 
 ---

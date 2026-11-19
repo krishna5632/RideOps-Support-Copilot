@@ -1,0 +1,12 @@
+services:
+  # Static Site Deployment (Fast, Free, Never Sleeps, Global CDN)
+  - type: web
+    name: rideops-support-copilot
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
